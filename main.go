@@ -30,7 +30,9 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(provider.DownloadURL(url))
+
+		fmt.Println(provider.DownloadURL(*url))
+		fmt.Println(provider.GetVersion(*url))
 	}
 
 	if err := scanner.Err(); err != nil {

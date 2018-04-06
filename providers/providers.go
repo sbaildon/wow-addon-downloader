@@ -8,7 +8,7 @@ import (
 type Provider interface {
 	DownloadURL(url.URL) string
 	GetName() string
-	GetVersion() string
+	GetVersion(url.URL) string
 }
 
 var Providers map[string]Provider
