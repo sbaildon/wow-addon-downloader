@@ -1,0 +1,6 @@
+system:
+  addon_dir: "/Users/sbaildon/Desktop/addons/"
+addons:
+  - https://wow.curseforge.com/projects/bad-boy
+  - https://wow.curseforge.com/projects/big-wigs
+  - https://google.com

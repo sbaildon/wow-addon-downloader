@@ -5,26 +5,29 @@ import (
 	"fmt"
 )
 
+// Provider does something
 type Provider interface {
 	DownloadURL(url.URL) string
-	GetName() string
-	GetVersion(url.URL) string
+	GetName(url.URL) (string, error)
+	GetVersion(url.URL) (string, error)
 }
 
-var Providers map[string]Provider
+var providers map[string]Provider
 
 func init() {
-	Providers = make(map[string]Provider)
+	providers = make(map[string]Provider)
 }
 
+// AddProvider lets you add a provider
 func AddProvider(name string, provider Provider) {
-	Providers[name] = provider
+	providers[name] = provider
 }
 
+// GetProvider gets you a provider
 func GetProvider(provider string) (Provider, error) {
-	if val, ok := Providers[provider]; ok {
+	if val, ok := providers[provider]; ok {
 		return val, nil
 	}
 
-	return nil, fmt.Errorf("Provider not found")
+	return nil, fmt.Errorf("%s is unsupported", provider)
 }
