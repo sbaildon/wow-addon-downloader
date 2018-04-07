@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"github.com/mholt/archiver"
-	"github.com/gosuri/uiprogress"
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
 
-	_ "github.com/shibukawa/configdir"
 	"github.com/sbaildon/wow-addon-downloader/providers"
 	_ "github.com/sbaildon/wow-addon-downloader/providers/curseforge"
 )
@@ -34,17 +34,15 @@ func (j *yamlurl) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return err
 }
 
-func download(provider providers.Provider, u url.URL, config config, bar *uiprogress.Bar, wg *sync.WaitGroup) {
+func download(provider providers.Provider, u url.URL, config config, bar *mpb.Bar, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	bar.Incr()
 	_, err := provider.GetName(u)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	bar.Incr()
 	_, err = provider.GetVersion(u)
 	if err != nil {
 		log.Println(err)
@@ -52,6 +50,7 @@ func download(provider providers.Provider, u url.URL, config config, bar *uiprog
 	}
 
 	var downloadURL = provider.DownloadURL(u)
+	bar.Increment()
 	resp, err := http.Get(downloadURL)
 	if err != nil {
 		log.Println(err)
@@ -72,8 +71,8 @@ func download(provider providers.Provider, u url.URL, config config, bar *uiprog
 	}
 	defer os.RemoveAll(dir)
 
-	bar.Incr()
 	/* Save zip to temporary directory */
+	bar.Increment()
 	out, err := os.Create(path.Join(dir, path.Base(resp.Request.URL.String())))
 	if err != nil {
 		log.Println(err)
@@ -82,16 +81,15 @@ func download(provider providers.Provider, u url.URL, config config, bar *uiprog
 	defer out.Close()
 	io.Copy(out, resp.Body)
 
-	bar.Incr()
 	/* Unzip files */
+	bar.Increment()
 	err = archiver.Zip.Open(out.Name(), config.System.AddonDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	bar.Incr()
-
+	bar.Increment()
 }
 
 type config struct {
@@ -114,32 +112,39 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
+	pool := mpb.New(mpb.WithWaitGroup(&wg))
 
-	uiprogress.Start()
-
-	var steps = []string{"starting", "fetching name", "fetching version", "downloading", "writing to disk", "unzipping", "done"}
+	var steps = []string{"checking version", "downloading", "saving", "unzipping", "finished"}
 
 	for _, url := range config.AddOns {
 		provider, err :=  providers.GetProvider(url.URL.Hostname())
 
-		bar := uiprogress.AddBar(len(steps))
-		bar.PrependElapsed()
 		if err != nil {
-			bar.PrependFunc(func(b *uiprogress.Bar) string{
-				return fmt.Sprintf("%s: %-15s", url.String(), "unsupported")
-			})
-			bar.Set(0)
+			bar := pool.AddBar(0,
+				mpb.AppendDecorators(decor.StaticName("-----", 5, 0),),
+				mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
+				mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
+					return fmt.Sprintf("%s", "unsupported")
+				}, 16, 1)),
+				mpb.PrependDecorators(decor.Elapsed(3, decor.DSyncSpace)),
+			)
+			bar.Complete()
 			continue
 		}
 
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			return fmt.Sprintf("%s: %-15s", url.String(), steps[b.Current()-1])
-		})
+		bar := pool.AddBar(int64(len(steps)-1),
+			mpb.AppendDecorators(decor.Percentage(5,0),),
+			mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
+			mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
+				return fmt.Sprintf("%s", steps[s.Current])
+			}, 16, 1)),
+			mpb.PrependDecorators(decor.Elapsed(3, decor.DSyncSpace)),
+		)
 
 		wg.Add(1)
 		go download(provider, *url.URL, config, bar, &wg)
 	}
 
-	wg.Wait()
+	pool.Wait()
 	fmt.Println("done")
 }
