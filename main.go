@@ -1,22 +1,22 @@
 package main
 
 import (
-	"io/ioutil"
-	"io"
-	"log"
-	"net/url"
-	"net/http"
-	"sync"
-	"os"
-	"path"
 	"fmt"
 	"gopkg.in/yaml.v2"
-	"github.com/mholt/archiver"
-	"github.com/vbauerster/mpb"
-	"github.com/vbauerster/mpb/decor"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"sync"
 
+	"github.com/mholt/archiver"
 	"github.com/sbaildon/wow-addon-downloader/providers"
 	_ "github.com/sbaildon/wow-addon-downloader/providers/curseforge"
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
 )
 
 type yamlurl struct {
@@ -117,11 +117,11 @@ func main() {
 	var steps = []string{"checking version", "downloading", "saving", "unzipping", "finished"}
 
 	for _, url := range config.AddOns {
-		provider, err :=  providers.GetProvider(url.URL.Hostname())
+		provider, err := providers.GetProvider(url.URL.Hostname())
 
 		if err != nil {
 			bar := pool.AddBar(0,
-				mpb.AppendDecorators(decor.StaticName("-----", 5, 0),),
+				mpb.AppendDecorators(decor.StaticName("-----", 5, 0)),
 				mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
 				mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
 					return fmt.Sprintf("%s", "unsupported")
@@ -133,7 +133,7 @@ func main() {
 		}
 
 		bar := pool.AddBar(int64(len(steps)-1),
-			mpb.AppendDecorators(decor.Percentage(5,0),),
+			mpb.AppendDecorators(decor.Percentage(5, 0)),
 			mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
 			mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
 				return fmt.Sprintf("%s", steps[s.Current])
