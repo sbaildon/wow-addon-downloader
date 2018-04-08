@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"sync"
+	"os/signal"
 
 	"github.com/mholt/archiver"
 	"github.com/sbaildon/wow-addon-downloader/providers"
@@ -102,13 +103,13 @@ type config struct {
 func main() {
 	configSource, err := ioutil.ReadFile("./config.yml")
 	if err != nil {
-		log.Fatal("Problem reading config file")
+		log.Println("Problem reading config file")
 	}
 
 	var config config
 	err = yaml.Unmarshal(configSource, &config)
 	if err != nil {
-		log.Fatal("Can't understand config file. Is it malformed?")
+		log.Println("Can't understand config file. Is it malformed?")
 	}
 
 	var wg sync.WaitGroup
@@ -146,5 +147,11 @@ func main() {
 	}
 
 	pool.Wait()
+	var signal_channel chan os.Signal
+	signal_channel = make(chan os.Signal, 1)
+	signal.Notify(signal_channel, os.Interrupt)
+	go func() {
+	    <-signal_channel
+	}()
 	fmt.Println("done")
 }
