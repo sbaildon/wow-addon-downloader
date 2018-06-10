@@ -18,6 +18,7 @@ deploy:
   file:
     - wow-addon-downloader
     - wow-addon-downloader.exe
+    - config.example.yml
   on:
     tags: true
   skip_cleanup: true
