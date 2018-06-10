@@ -1,7 +1,20 @@
 # wow-addon-updater
 
-Download wow addons from various sites.
+Download WoW addons from various sites.
 
-Visit the releases page, download the binary for your platform and the example config file.
+## Supported
 
-Remove `.example` from the config file, and add files, then run the binary
+* Wowace (https://www.wowace.com/)
+* CurseForge (https://wow.curseforge.com/)
+
+## Usage
+
+1. Download your platform's binary from the [releases](https://github.com/sBaildon/wow-addon-downloader/releases) page
+
+	* Windows (.exe)
+	* macOS (no extension)
+
+1. Download the example config file.
+1. Remove `.example` from the config file
+1. Update `addon_dir` and add your addons to the list
+1. Place both files in the same directory and run the binary
