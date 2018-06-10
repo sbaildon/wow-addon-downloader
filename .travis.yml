@@ -1,22 +1,28 @@
 language: go
-go: "1.10"
+go: '1.10'
 
 env:
-  - DEP_VERSION="0.4.1"
+- DEP_VERSION="0.4.1"
 
 before_install:
-  - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
-  - chmod +x $GOPATH/bin/dep
+- curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
+- chmod +x $GOPATH/bin/dep
 
 install:
-  - dep ensure
+- dep ensure
 
 deploy:
   provider: releases
   api_key:
-    secure: "iI0LuLirkDRAJGkwliZxA6T0iAzXWidpfJYxleQKK8K16h9wCPxrH7vxXRswP7zyPrKtBFqAJ6e8ayX8B5rr7WUfbC1Kr8Wuy7IkhXgH7MyF9n2PS03YsFyatzjf1BoaEKjBPLfCANXX8gz+t62uzJwgxCpsvOC94LRWpHsmtP1d0ybUnfgmugibSCmCd6uZGuSzoOqmoeXO0oywv5vM08rCAzb7b9x1ich8Ndj5KqVoPLu7Z/V5U5Nnt2ffRUEYb/tz44SltCKWiz3FPJeAY6FbXj1fZYs5QBVXtOyah17tuvEOKi7kOaim5LJBWjSKpYCmaW4OzDcVyHrWvLJmEdGNdDS1I9oenFneTbWA8OrKexGuV9OGu+Gfv1Ku+QOFX0g4jjDSWmf8VBHQnz10K/a+GyT4BNLTfgMWveYPX0crFp0Ovj6EwqiBqLaMIlhn8DA45C9WiMUlvcduEO91OXIcwwlgioylkJuNX3Fvs/szKZvrJ2mTRTVfOBK84AxbuWmYUOAtLBovWMHK71+QZCewu3AwZSSy0OuIBunwRH4ePwHjF4V0b5gws4Y5iuawPxVG5eely6MCoAl/3rmeJXXR1lIvupSTAbjgWWsQttumffWPmKNyZU/R38wYbCXR0klpuTNu1FddOaOVobL682sb1XCEgfhYBshr8mWP3YA="
-  skip_cleanup: true
-  files:
+    secure: irXGWY8142OBdn6Aaogh8ekmgkbWslee4u0O8MrE+Irv2Ou3INzJ9s+FE9SV+14A0E5vVMu/hkixKvkE6VleWvtSBIZWCV/4WHn9TESWDteXvDdCuZ7Pp7sJPbuCV7RIQ9qcsQcRWTtM5uXri/bmxafD8ziBxFUbdT3bTjUSfWM3961fIC2QLCJ4s9C3USd6FfwKm2ur5d2h2pV0QyWIK6t53uLgi0eQ+zvg4Sgq5jwLDryTFNoWqLtMo++7Q/lraxPt1vwLgiTHd4eXxaSjea0Dpss/bLJfyvs1qiv0qqMZnCXg9COWlSxwVGLznEk/xjL8QOhF8hAvsVf9HgSHK7bUaHJn0UtjYneie/pPeBgoxdP+gApppM+hYUPew3Q9/g/Rp8ku0AalGAnE6lqFUqg8I/UzUoD6TiUQzTsCIVCaYeAJMe9WgfW6VFFZlZ84hI54rm1jS7oypxho4VHaH83qZCDKSyQI5oc5jjU6vdtzGOHdmO/Vb2q8rbU2QUgDp9pXZPKxLs6VrtUTOYvd6NeHAM9gvOwoReRg2BM6M1fjR4oXgsr+j/WX3IJ9RuGWuxFwCvn/txEshEZGPfEUkClZ/NbquHInA0tbtuaH67s/h7c5tJsFKnx5q0woS5vq+I/PJ/A8Qr4dzcEZldG6B3za6MWlTIi0nuEionyhZLc=
+  file:
     - wow-addon-downloader
     - wow-addon-downloader.exe
-    - config.example.yml
+  on:
+    tags: true
+  skip_cleanup: true
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
