@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path"
 	"sync"
-	"os/signal"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/mholt/archiver"
 	"github.com/sbaildon/wow-addon-downloader/providers"
@@ -35,6 +36,18 @@ func (j *yamlurl) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return err
 }
 
+const (
+	downloadError = 100
+	mkdirError    = 101
+	saveError     = 102
+	unzipError    = 103
+)
+
+func errorBar(bar *mpb.Bar, errorCode int64) {
+	bar.SetTotal(errorCode, true)
+	bar.IncrBy(int(bar.Total() - bar.Current()))
+}
+
 func download(provider providers.Provider, u url.URL, config config, bar *mpb.Bar, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -49,44 +62,44 @@ func download(provider providers.Provider, u url.URL, config config, bar *mpb.Ba
 		log.Println(err)
 		return
 	}
+	bar.Increment()
 
 	var downloadURL = provider.DownloadURL(u)
-	bar.Increment()
 	resp, err := http.Get(downloadURL)
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, downloadError)
 		return
 	}
 	defer resp.Body.Close()
+	bar.Increment()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("Request failed, status not ok")
+		errorBar(bar, downloadError)
 		return
 	}
 
 	/* Create a temporary directory for saving files */
-	dir, err := ioutil.TempDir("", "wow-addon-downloader")
+	tempDir, err := ioutil.TempDir("", "wow-addon-downloader")
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, mkdirError)
 		return
 	}
-	defer os.RemoveAll(dir)
+	defer os.RemoveAll(tempDir)
 
 	/* Save zip to temporary directory */
-	bar.Increment()
-	out, err := os.Create(path.Join(dir, path.Base(resp.Request.URL.String())))
+	out, err := os.Create(path.Join(tempDir, path.Base(resp.Request.URL.String())))
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, saveError)
 		return
 	}
 	defer out.Close()
 	io.Copy(out, resp.Body)
+	bar.Increment()
 
 	/* Unzip files */
-	bar.Increment()
 	err = archiver.Zip.Open(out.Name(), config.System.AddonDir)
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, saveError)
 		return
 	}
 
@@ -110,36 +123,54 @@ func main() {
 	err = yaml.Unmarshal(configSource, &config)
 	if err != nil {
 		log.Println("Can't understand config file. Is it malformed?")
+
 	}
 
 	var wg sync.WaitGroup
-	pool := mpb.New(mpb.WithWaitGroup(&wg))
+	pool := mpb.New(mpb.WithWaitGroup(&wg), mpb.WithWidth(10))
 
-	var steps = []string{"checking version", "downloading", "saving", "unzipping", "finished"}
+	var steps = []string{"searching", "downloading", "saving", "unzipping", "done"}
 
 	for _, url := range config.AddOns {
 		provider, err := providers.GetProvider(url.URL.Hostname())
 
 		if err != nil {
-			bar := pool.AddBar(0,
-				mpb.AppendDecorators(decor.StaticName("-----", 5, 0)),
-				mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
-				mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
-					return fmt.Sprintf("%s", "unsupported")
-				}, 16, 1)),
-				mpb.PrependDecorators(decor.Elapsed(3, decor.DSyncSpace)),
+			bar := pool.AddBar(1,
+				mpb.BarClearOnComplete(),
+				mpb.PrependDecorators(
+					decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight),
+					decor.StaticName(fmt.Sprint("unsupported"), 16, 1),
+				),
 			)
-			bar.Complete()
+			bar.Increment()
 			continue
 		}
 
 		bar := pool.AddBar(int64(len(steps)-1),
-			mpb.AppendDecorators(decor.Percentage(5, 0)),
-			mpb.PrependDecorators(decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight)),
-			mpb.PrependDecorators(decor.DynamicName(func(s *decor.Statistics) string {
-				return fmt.Sprintf("%s", steps[s.Current])
-			}, 16, 1)),
-			mpb.PrependDecorators(decor.Elapsed(3, decor.DSyncSpace)),
+			mpb.BarClearOnComplete(),
+			mpb.AppendDecorators(
+				decor.OnComplete(decor.Percentage(5, 0), "", 0, decor.DwidthSync),
+			),
+			mpb.PrependDecorators(
+				decor.StaticName(fmt.Sprintf("%s:", url.String()), 0, decor.DSyncSpace+decor.DidentRight),
+				decor.DynamicName(func(s *decor.Statistics) string {
+					switch s.Total {
+					case downloadError:
+						return "Failed to download"
+					case mkdirError:
+						return "Failed to create addon directory"
+					case saveError:
+						return "Unable to save addon"
+					case unzipError:
+						return "Unable to unzip addon"
+					default:
+						return fmt.Sprintf("%s", steps[s.Current])
+					}
+				}, 16, 1),
+				decor.OnComplete(
+					decor.Elapsed(3, decor.DSyncSpace), "", 0, decor.DwidthSync,
+				),
+			),
 		)
 
 		wg.Add(1)
@@ -147,11 +178,10 @@ func main() {
 	}
 
 	pool.Wait()
-	var signal_channel chan os.Signal
-	signal_channel = make(chan os.Signal, 1)
-	signal.Notify(signal_channel, os.Interrupt)
+	var signalChannel chan os.Signal
+	signalChannel = make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt)
 	go func() {
-	    <-signal_channel
+		<-signalChannel
 	}()
-	fmt.Println("done")
 }
