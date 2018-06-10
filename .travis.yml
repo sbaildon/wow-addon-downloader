@@ -1,0 +1,12 @@
+language: go
+go: "1.10"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "iI0LuLirkDRAJGkwliZxA6T0iAzXWidpfJYxleQKK8K16h9wCPxrH7vxXRswP7zyPrKtBFqAJ6e8ayX8B5rr7WUfbC1Kr8Wuy7IkhXgH7MyF9n2PS03YsFyatzjf1BoaEKjBPLfCANXX8gz+t62uzJwgxCpsvOC94LRWpHsmtP1d0ybUnfgmugibSCmCd6uZGuSzoOqmoeXO0oywv5vM08rCAzb7b9x1ich8Ndj5KqVoPLu7Z/V5U5Nnt2ffRUEYb/tz44SltCKWiz3FPJeAY6FbXj1fZYs5QBVXtOyah17tuvEOKi7kOaim5LJBWjSKpYCmaW4OzDcVyHrWvLJmEdGNdDS1I9oenFneTbWA8OrKexGuV9OGu+Gfv1Ku+QOFX0g4jjDSWmf8VBHQnz10K/a+GyT4BNLTfgMWveYPX0crFp0Ovj6EwqiBqLaMIlhn8DA45C9WiMUlvcduEO91OXIcwwlgioylkJuNX3Fvs/szKZvrJ2mTRTVfOBK84AxbuWmYUOAtLBovWMHK71+QZCewu3AwZSSy0OuIBunwRH4ePwHjF4V0b5gws4Y5iuawPxVG5eely6MCoAl/3rmeJXXR1lIvupSTAbjgWWsQttumffWPmKNyZU/R38wYbCXR0klpuTNu1FddOaOVobL682sb1XCEgfhYBshr8mWP3YA="
+  skip_cleanup: true
+  files:
+    - wow-addon-downloader
+    - wow-addon-downloader.exe
+    - config.example.yml
