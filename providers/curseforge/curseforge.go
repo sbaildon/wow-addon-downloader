@@ -2,24 +2,25 @@ package curseforge
 
 import (
 	"fmt"
-	"path"
-	"net/url"
 	"net/http"
-	"golang.org/x/net/html"
+	"net/url"
+	"path"
+
 	"github.com/patrickmn/go-cache"
 	"github.com/sbaildon/wow-addon-downloader/providers"
+	"golang.org/x/net/html"
 )
 
 func contains(s []html.Attribute, key string, value string) bool {
-    for _, attribute := range s {
-        if attribute.Key == key {
-		if attribute.Val == value {
-		    return true
+	for _, attribute := range s {
+		if attribute.Key == key {
+			if attribute.Val == value {
+				return true
+			}
+			return false
 		}
-		return false
-        }
-    }
-    return false
+	}
+	return false
 }
 
 func cacheFetch(u url.URL) (*http.Response, error) {
@@ -45,7 +46,7 @@ func init() {
 }
 
 // CurseForge is a provider for curse
-type CurseForge struct {}
+type CurseForge struct{}
 
 // DownloadURL does something
 func (p CurseForge) DownloadURL(u url.URL) string {
@@ -65,6 +66,7 @@ func (p CurseForge) GetName(u url.URL) (string, error) {
 		tt := z.Next()
 		if tt == html.ErrorToken {
 			return "", fmt.Errorf("Unable to find name for %s", u.String())
+			// return "hello", nil
 		}
 
 		if tt != html.SelfClosingTagToken {
