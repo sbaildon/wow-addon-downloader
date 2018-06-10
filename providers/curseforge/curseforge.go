@@ -42,6 +42,7 @@ var pageCache *cache.Cache
 
 func init() {
 	providers.AddProvider("wow.curseforge.com", &CurseForge{})
+	providers.AddProvider("www.wowace.com", &CurseForge{})
 	pageCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 }
 
