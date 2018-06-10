@@ -41,6 +41,7 @@ const (
 	mkdirError    = 101
 	saveError     = 102
 	unzipError    = 103
+	missingError  = 104
 )
 
 func errorBar(bar *mpb.Bar, errorCode int64) {
@@ -53,13 +54,13 @@ func download(provider providers.Provider, u url.URL, config config, bar *mpb.Ba
 
 	_, err := provider.GetName(u)
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, missingError)
 		return
 	}
 
 	_, err = provider.GetVersion(u)
 	if err != nil {
-		log.Println(err)
+		errorBar(bar, missingError)
 		return
 	}
 	bar.Increment()
@@ -156,13 +157,15 @@ func main() {
 				decor.DynamicName(func(s *decor.Statistics) string {
 					switch s.Total {
 					case downloadError:
-						return "Failed to download"
+						return "failed to download"
 					case mkdirError:
-						return "Failed to create addon directory"
+						return "failed to create addon directory"
 					case saveError:
-						return "Unable to save addon"
+						return "unable to save addon"
 					case unzipError:
-						return "Unable to unzip addon"
+						return "unable to unzip addon"
+					case missingError:
+						return "unable to locate"
 					default:
 						return fmt.Sprintf("%s", steps[s.Current])
 					}
