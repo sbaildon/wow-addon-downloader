@@ -65,7 +65,12 @@ func download(provider providers.Provider, u url.URL, config config, bar *mpb.Ba
 	}
 	bar.Increment()
 
-	var downloadURL = provider.DownloadURL(u)
+	downloadURL, err := provider.DownloadURL(u)
+	if err != nil {
+		errorBar(bar, downloadError)
+		return
+	}
+
 	resp, err := http.Get(downloadURL)
 	if err != nil {
 		errorBar(bar, downloadError)
