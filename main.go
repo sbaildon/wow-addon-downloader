@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -113,8 +114,14 @@ type config struct {
 	AddOns []yamlurl `yaml:"addons"`
 }
 
+var (
+	configFile = flag.String("config-file", "./config.yml", "Configuration file")
+)
+
 func main() {
-	configSource, err := ioutil.ReadFile("./config.yml")
+	flag.Parse()
+
+	configSource, err := ioutil.ReadFile(*configFile)
 	if err != nil {
 		log.Println("Problem reading config file")
 	}
