@@ -1,3 +1,4 @@
 wow-addon-downloader*
 vendor
 config.yml
+.tests
