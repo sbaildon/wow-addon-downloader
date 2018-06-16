@@ -17,6 +17,7 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/sbaildon/wow-addon-downloader/providers"
 	_ "github.com/sbaildon/wow-addon-downloader/providers/curseforge"
+	_ "github.com/sbaildon/wow-addon-downloader/providers/wowinterface"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
 )
