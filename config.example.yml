@@ -1,7 +1,6 @@
 system:
   addon_dir: "C:/Program Files/World of Warcraft/Interface/AddOns/"
 addons:
-  - https://wow.curseforge.com/projects/big-wigs
   - https://wow.curseforge.com/projects/bad-boy
-  - https://wow.curseforge.com/projects/details
+  - https://www.wowace.com/projects/angry-keystones
   - http://www.wowinterface.com/downloads/info7032-TomTom.html
