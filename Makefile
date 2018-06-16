@@ -5,7 +5,7 @@ SOURCE=$(shell find . -type f -name "*.go")
 WINDOWS_BINARY=$(binary).exe
 DARWIN_BINARY=$(binary)
 
-all: $(TEST) $(WINDOWS_BINARY) $(DARWIN_BINARY)
+all: test $(WINDOWS_BINARY) $(DARWIN_BINARY)
 
 .PHONY: windows
 windows: $(WINDOWS_BINARY)
