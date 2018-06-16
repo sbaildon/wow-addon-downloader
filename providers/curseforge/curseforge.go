@@ -50,9 +50,9 @@ func init() {
 type CurseForge struct{}
 
 // DownloadURL does something
-func (p CurseForge) DownloadURL(u url.URL) string {
+func (p CurseForge) DownloadURL(u url.URL) (string, error) {
 	u.Path = path.Join(u.Path, "/files/latest")
-	return u.String()
+	return u.String(), nil
 }
 
 // GetName does something

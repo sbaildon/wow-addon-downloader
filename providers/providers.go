@@ -1,13 +1,13 @@
 package providers
 
 import (
-	"net/url"
 	"fmt"
+	"net/url"
 )
 
 // Provider does something
 type Provider interface {
-	DownloadURL(url.URL) string
+	DownloadURL(url.URL) (string, error)
 	GetName(url.URL) (string, error)
 	GetVersion(url.URL) (string, error)
 }
