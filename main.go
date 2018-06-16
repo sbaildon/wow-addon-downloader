@@ -123,14 +123,13 @@ func main() {
 
 	configSource, err := ioutil.ReadFile(*configFile)
 	if err != nil {
-		log.Println("Problem reading config file")
+		log.Fatal("Problem reading config file")
 	}
 
 	var config config
 	err = yaml.Unmarshal(configSource, &config)
 	if err != nil {
-		log.Println("Can't understand config file. Is it malformed?")
-
+		log.Fatal("Can't understand config file. Is it malformed?")
 	}
 
 	var wg sync.WaitGroup
@@ -195,5 +194,4 @@ func main() {
 		fmt.Print("Finished")
 		<-signalChannel
 	}
-
 }
