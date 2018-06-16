@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"path"
 	"sync"
 
 	"gopkg.in/yaml.v2"
@@ -86,25 +85,18 @@ func download(provider providers.Provider, u url.URL, config config, bar *mpb.Ba
 	}
 
 	/* Create a temporary directory for saving files */
-	tempDir, err := ioutil.TempDir("", "wow-addon-downloader")
-	if err != nil {
-		errorBar(bar, mkdirError)
-		return
-	}
-	defer os.RemoveAll(tempDir)
-
-	/* Save zip to temporary directory */
-	out, err := os.Create(path.Join(tempDir, path.Base(resp.Request.URL.String())))
+	tempFile, err := ioutil.TempFile("", "addon")
 	if err != nil {
 		errorBar(bar, saveError)
 		return
 	}
-	defer out.Close()
-	io.Copy(out, resp.Body)
+	defer os.Remove(tempFile.Name())
+
+	io.Copy(tempFile, resp.Body)
 	bar.Increment()
 
 	/* Unzip files */
-	err = archiver.Zip.Open(out.Name(), config.System.AddonDir)
+	err = archiver.Zip.Open(tempFile.Name(), config.System.AddonDir)
 	if err != nil {
 		errorBar(bar, saveError)
 		return
