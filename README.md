@@ -11,6 +11,10 @@ Download WoW addons from various providers.
 * CurseForge (https://wow.curseforge.com/)
 * WoWInterface (https://www.wowinterface.com/)
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/187480.png)](https://asciinema.org/a/187480)
+
 ## Usage
 
 1. Download your platform's binary from the [releases](https://github.com/sBaildon/wow-addon-downloader/releases) page
