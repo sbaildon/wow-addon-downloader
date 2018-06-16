@@ -1,4 +1,4 @@
-# wow-addon-updater
+# wow-addon-downloader
 
 Download WoW addons from various providers.
 
