@@ -5,7 +5,7 @@ SOURCE=$(shell find . -type f -name "*.go")
 WINDOWS_BINARY=$(binary).exe
 DARWIN_BINARY=$(binary)
 
-all: $(WINDOWS_BINARY) $(DARWIN_BINARY)
+all: $(TEST) $(WINDOWS_BINARY) $(DARWIN_BINARY)
 
 .PHONY: windows
 windows: $(WINDOWS_BINARY)
@@ -18,6 +18,10 @@ $(WINDOWS_BINARY): $(SOURCE)
 
 $(DARWIN_BINARY): $(SOURCE)
 	GOOS=darwin GOARCH=amd64 go build -o $(binary) .
+
+.PHONY: test
+test:
+	go test ./...
 
 .PHONY: clean
 clean:
