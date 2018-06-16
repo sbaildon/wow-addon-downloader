@@ -1,11 +1,14 @@
 package curseforge
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/patrickmn/go-cache"
 	"github.com/sbaildon/wow-addon-downloader/providers"
 	"golang.org/x/net/html"
@@ -23,19 +26,25 @@ func contains(s []html.Attribute, key string, value string) bool {
 	return false
 }
 
-func cacheFetch(u url.URL) (*http.Response, error) {
-	resp, cacheHit := pageCache.Get(u.String())
+func cacheFetch(u url.URL) ([]byte, error) {
+	body, cacheHit := pageCache.Get(u.String())
 	if !cacheHit {
 		resp, err := http.Get(u.String())
 		if err != nil {
-			var nothing http.Response
-			return &nothing, fmt.Errorf("Can't connect to %s", u.String())
+			return nil, fmt.Errorf("Can't connect to %s", u.String())
 		}
-		pageCache.Add(u.String(), resp, cache.NoExpiration)
-		return resp, nil
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			return nil, fmt.Errorf("Unable to read response body")
+		}
+
+		pageCache.Add(u.String(), body, cache.NoExpiration)
+		return body, nil
 	}
 
-	return resp.(*http.Response), nil
+	return body.([]byte), nil
 }
 
 var pageCache *cache.Cache
@@ -62,62 +71,55 @@ func (p CurseForge) GetName(u url.URL) (string, error) {
 		return "", err
 	}
 
-	z := html.NewTokenizer(resp.Body)
-	for {
-		tt := z.Next()
-		if tt == html.ErrorToken {
-			return "", fmt.Errorf("Unable to find name for %s", u.String())
-			// return "hello", nil
-		}
-
-		if tt != html.SelfClosingTagToken {
-			continue
-		}
-
-		t := z.Token()
-		if t.Data != "meta" {
-			continue
-		}
-
-		if !contains(t.Attr, "property", "og:title") {
-			continue
-		}
-
-		for _, a := range t.Attr {
-			if a.Key == "content" {
-				return a.Val, nil
-			}
-		}
-	}
-}
-
-// GetVersion does something
-func (p CurseForge) GetVersion(u url.URL) (string, error) {
-	resp, err := cacheFetch(u)
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp))
 	if err != nil {
 		return "", err
 	}
 
-	z := html.NewTokenizer(resp.Body)
-	for {
-		tt := z.Next()
-
-		if tt == html.ErrorToken {
-			return "", fmt.Errorf("Unable to find version for %s", u.String())
-		}
-		if tt != html.StartTagToken {
-			continue
-		}
-
-		t := z.Token()
-		if t.Data != "a" {
-			continue
-		}
-
-		for _, a := range t.Attr {
-			if a.Key == "data-name" {
-				return a.Val, nil
+	var name string
+	doc.Find("meta").EachWithBreak(func(i int, s *goquery.Selection) bool {
+		if prop, found := s.Attr("property"); found {
+			if prop == "og:title" {
+				name, _ = s.Attr("content")
+				return false
 			}
 		}
+		return true
+	})
+
+	if len(name) > 0 {
+		return name, nil
 	}
+
+	return "", fmt.Errorf("Unable to find name")
+}
+
+// GetVersion does something
+func (p CurseForge) GetVersion(u url.URL) (string, error) {
+	files, _ := url.Parse(u.String() + "/files")
+	resp, err := cacheFetch(*files)
+
+	if err != nil {
+		return "", err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp))
+	if err != nil {
+		return "", err
+	}
+
+	var version string
+	doc.Find(".listing-project-file").Find("a").EachWithBreak(func(i int, s *goquery.Selection) bool {
+		if attr, found := s.Attr("data-name"); found {
+			version = attr
+			return false
+		}
+		return true
+	})
+
+	if len(version) > 0 {
+		return version, nil
+	}
+
+	return "", fmt.Errorf("Unable to find version")
 }
