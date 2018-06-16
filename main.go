@@ -107,7 +107,8 @@ func download(provider providers.Provider, u url.URL, config config, bar *mpb.Ba
 
 type config struct {
 	System struct {
-		AddonDir string `yaml:"addon_dir"`
+		AddonDir      string `yaml:"addon_dir"`
+		CloseOnFinish bool   `yaml:"close_on_finish"`
 	} `yaml:"system"`
 	AddOns []yamlurl `yaml:"addons"`
 }
@@ -179,10 +180,13 @@ func main() {
 	}
 
 	pool.Wait()
-	var signalChannel chan os.Signal
-	signalChannel = make(chan os.Signal, 1)
-	signal.Notify(signalChannel, os.Interrupt)
-	go func() {
+
+	if !config.System.CloseOnFinish {
+		var signalChannel chan os.Signal
+		signalChannel = make(chan os.Signal, 1)
+		signal.Notify(signalChannel, os.Interrupt)
+		fmt.Print("Finished")
 		<-signalChannel
-	}()
+	}
+
 }
