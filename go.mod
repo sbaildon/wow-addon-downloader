@@ -1,4 +1,4 @@
-module github.com/sBaildon/wow-addon-downloader
+module github.com/sbaildon/wow-addon-downloader
 
 require (
 	github.com/PuerkitoBio/goquery v1.4.1
