@@ -1,7 +1,8 @@
 system:
-  addon_dir: "C:/Program Files/World of Warcraft/Interface/AddOns/"
+  addon_dir: "C:/Program Files/World of Warcraft/_retail_/Interface/AddOns/"
   close_on_finish: false
 addons:
   - https://wow.curseforge.com/projects/bad-boy
   - https://www.wowace.com/projects/angry-keystones
   - http://www.wowinterface.com/downloads/info7032-TomTom.html
+  - https://www.wowinterface.com/downloads/info24674-sInterface.html
